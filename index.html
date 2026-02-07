@@ -163,7 +163,7 @@
 
         .reseller-info {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-top: 20px;
         }
@@ -284,15 +284,10 @@
         }
 
         /* Generated Codes Display */
-        .codes-container {
-            display: none;
-            margin-top: 30px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .codes-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .code-item {
@@ -318,6 +313,7 @@
             font-size: 1.1rem;
             letter-spacing: 2px;
             cursor: pointer;
+            word-break: break-all;
         }
 
         .code-status {
@@ -488,6 +484,7 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: 0.8rem;
+            white-space: nowrap;
         }
 
         .copy-btn:hover {
@@ -522,6 +519,14 @@
                 gap: 10px;
                 text-align: center;
             }
+            
+            .logout-btn {
+                bottom: 15px;
+                right: 15px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -532,7 +537,7 @@
             <h1 class="login-title">RESELLER PORTAL<br>STANY MINES PRO</h1>
             <div class="input-group">
                 <label><i class="fas fa-key"></i> RESELLER CODE</label>
-                <input type="text" id="resellerCode" placeholder="Enter your reseller code" maxlength="20">
+                <input type="text" id="resellerCode" placeholder="Enter your reseller code (e.g., STANY-H2D2LKBG)" maxlength="20">
             </div>
             <div class="input-group">
                 <label><i class="fas fa-user"></i> RESELLER USERNAME</label>
@@ -622,7 +627,7 @@
                     Loading your codes...
                 </div>
                 
-                <div id="codesList">
+                <div class="codes-list" id="codesList">
                     <!-- Codes will be loaded here -->
                 </div>
             </div>
@@ -683,7 +688,7 @@
     </div>
 
     <script>
-        // Firebase Configuration (SAME AS USER APP)
+        // Firebase Configuration (SAME AS OTHER APPS)
         const firebaseConfig = {
             apiKey: "AIzaSyB0B5H5gJ8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8",
             authDomain: "stany-mines-pro.firebaseapp.com",
@@ -695,7 +700,6 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
 
         // Global Variables
@@ -725,7 +729,7 @@
                         // Expired
                         localStorage.removeItem('stany_reseller');
                         localStorage.removeItem('stany_reseller_data');
-                        showMessage('Reseller account expired. Please contact admin.');
+                        showMessage('Reseller account expired. Please contact admin.', 'error');
                     }
                 } catch (e) {
                     localStorage.clear();
@@ -737,7 +741,7 @@
             document.addEventListener('copy', e => e.preventDefault());
         });
 
-        // Login Reseller
+        // Login Reseller (FIXED VERSION)
         async function loginReseller() {
             const resellerCode = document.getElementById('resellerCode').value.trim().toUpperCase();
             const username = document.getElementById('resellerUsername').value.trim();
@@ -752,6 +756,12 @@
                 return;
             }
             
+            // Validate code format (STANY-XXXXXXXX)
+            if (!resellerCode.startsWith('STANY-') || resellerCode.length !== 14) {
+                showMessage('Invalid code format. Must be STANY-XXXXXXXX (8 characters)', 'error');
+                return;
+            }
+            
             showMessage('Validating reseller code...', 'info');
             
             try {
@@ -760,7 +770,7 @@
                 const doc = await codeRef.get();
                 
                 if (!doc.exists) {
-                    showMessage('Invalid reseller code', 'error');
+                    showMessage('Invalid reseller code. Code not found in system.', 'error');
                     return;
                 }
                 
@@ -791,11 +801,15 @@
                     return;
                 }
                 
+                // Generate device ID
+                const deviceId = generateDeviceId();
+                
                 // Activate reseller account
                 currentReseller = {
                     username: username,
                     resellerCode: resellerCode,
-                    deviceId: generateDeviceId()
+                    deviceId: deviceId,
+                    activatedAt: Date.now()
                 };
                 
                 resellerData = {
@@ -805,7 +819,7 @@
                     expiry: codeData.expiry,
                     maxCodes: codeData.maxCodes || 10,
                     generatedCodes: 0,
-                    deviceId: currentReseller.deviceId,
+                    deviceId: deviceId,
                     activatedAt: Date.now()
                 };
                 
@@ -813,6 +827,7 @@
                 await codeRef.update({
                     used: true,
                     usedBy: username,
+                    usedByDevice: deviceId,
                     usedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -824,7 +839,7 @@
                     expiry: codeData.expiry,
                     maxCodes: codeData.maxCodes || 10,
                     generatedCodes: 0,
-                    deviceId: currentReseller.deviceId,
+                    deviceId: deviceId,
                     lastActive: firebase.firestore.FieldValue.serverTimestamp(),
                     activatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -840,7 +855,7 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                showMessage('Error activating reseller account', 'error');
+                showMessage('Error activating reseller account: ' + error.message, 'error');
             }
         }
 
@@ -868,31 +883,39 @@
         async function loadResellerData() {
             if (!resellerData) return;
             
-            // Update UI with reseller data
-            document.getElementById('codesGenerated').textContent = resellerData.generatedCodes || 0;
-            
-            const maxCodes = resellerData.maxCodes || 10;
-            const generated = resellerData.generatedCodes || 0;
-            const remaining = maxCodes - generated;
-            
-            document.getElementById('codesRemaining').textContent = remaining > 0 ? remaining : 0;
-            
-            // Calculate days until expiry
-            if (resellerData.expiry) {
-                const now = Date.now();
-                const expiry = resellerData.expiry;
-                const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                
-                document.getElementById('expiresIn').textContent = daysLeft > 0 ? `${daysLeft} days` : 'Expired';
-                
-                if (daysLeft <= 0) {
-                    document.getElementById('generateBtn').disabled = true;
-                    document.getElementById('generateBtn').innerHTML = '<i class="fas fa-ban"></i> ACCOUNT EXPIRED';
-                }
-            }
-            
-            // Get used codes count
             try {
+                // Refresh data from Firebase
+                const userDoc = await db.collection('users').doc(currentReseller.username).get();
+                if (userDoc.exists) {
+                    const firebaseData = userDoc.data();
+                    resellerData = { ...resellerData, ...firebaseData };
+                    localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
+                }
+                
+                // Update UI with reseller data
+                document.getElementById('codesGenerated').textContent = resellerData.generatedCodes || 0;
+                
+                const maxCodes = resellerData.maxCodes || 10;
+                const generated = resellerData.generatedCodes || 0;
+                const remaining = maxCodes - generated;
+                
+                document.getElementById('codesRemaining').textContent = remaining > 0 ? remaining : 0;
+                
+                // Calculate days until expiry
+                if (resellerData.expiry) {
+                    const now = Date.now();
+                    const expiry = resellerData.expiry;
+                    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                    
+                    document.getElementById('expiresIn').textContent = daysLeft > 0 ? `${daysLeft} days` : 'Expired';
+                    
+                    if (daysLeft <= 0) {
+                        document.getElementById('generateBtn').disabled = true;
+                        document.getElementById('generateBtn').innerHTML = '<i class="fas fa-ban"></i> ACCOUNT EXPIRED';
+                    }
+                }
+                
+                // Get used codes count
                 const codesSnapshot = await db.collection('codes')
                     .where('generatedBy', '==', currentReseller.resellerCode)
                     .where('used', '==', true)
@@ -919,7 +942,7 @@
                 document.getElementById('successRate').textContent = `${successRate}%`;
                 
             } catch (error) {
-                console.error('Error loading statistics:', error);
+                console.error('Error loading reseller data:', error);
             }
         }
 
@@ -977,16 +1000,23 @@
                                     createdDate = code.createdAt.toDate().toLocaleDateString();
                                 }
                                 
+                                // Duration display
+                                let durationText = 'N/A';
+                                if (code.duration === 'week') durationText = '1 Week';
+                                else if (code.duration === 'month') durationText = '1 Month';
+                                else if (code.duration === 'lifetime') durationText = 'Lifetime';
+                                
                                 codeItem.innerHTML = `
-                                    <div>
+                                    <div style="flex: 1;">
                                         <div class="code-value" onclick="copyCode('${doc.id}')">
                                             ${doc.id}
                                         </div>
                                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
-                                            Created: ${createdDate} | Duration: ${code.duration || 'N/A'}
+                                            <div>Duration: ${durationText}</div>
+                                            <div>Created: ${createdDate}</div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div style="text-align: right;">
                                         <span class="code-status ${status}">${statusText}</span>
                                         <div style="margin-top: 10px;">
                                             <button class="copy-btn" onclick="copyCode('${doc.id}')">
@@ -1003,13 +1033,16 @@
                         codesLoading.style.display = 'none';
                         
                         // Update reseller data
-                        resellerData.generatedCodes = snapshot.size;
-                        localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
-                        loadResellerData();
+                        if (resellerData) {
+                            resellerData.generatedCodes = snapshot.size;
+                            localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
+                            loadResellerData();
+                        }
                         
                     }, error => {
                         console.error('Codes listener error:', error);
                         codesLoading.style.display = 'none';
+                        showMessage('Error loading codes. Please refresh.', 'error');
                     });
                 
             } catch (error) {
@@ -1019,12 +1052,21 @@
             }
         }
 
-        // Generate Premium Codes
+        // Generate Premium Codes (FIXED VERSION)
         async function generatePremiumCodes() {
-            if (!resellerData) return;
+            if (!resellerData) {
+                showMessage('Please login first', 'error');
+                return;
+            }
             
             const duration = document.getElementById('codeDuration').value;
-            const quantity = parseInt(document.getElementById('codeQuantity').value) || 1;
+            let quantity = parseInt(document.getElementById('codeQuantity').value) || 1;
+            
+            // Validate quantity
+            if (quantity < 1 || quantity > 10) {
+                showMessage('Quantity must be between 1 and 10', 'error');
+                return;
+            }
             
             // Check if reseller can generate more codes
             const maxCodes = resellerData.maxCodes || 10;
@@ -1036,8 +1078,9 @@
             }
             
             if (generated + quantity > maxCodes) {
-                showMessage(`You can only generate ${maxCodes - generated} more codes`, 'error');
-                return;
+                quantity = maxCodes - generated;
+                showMessage(`You can only generate ${quantity} more codes (limit: ${maxCodes})`, 'warning');
+                if (quantity <= 0) return;
             }
             
             // Check if reseller account is expired
@@ -1052,13 +1095,8 @@
             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERATING...';
             
             try {
-                // Calculate expiry based on duration
-                let days = 7;
-                if (duration === 'week') days = 7;
-                else if (duration === 'month') days = 30;
-                else if (duration === 'lifetime') days = 36500; // 100 years
-                
-                const expiry = resellerData.expiry; // Use reseller's expiry date
+                // Set expiry same as reseller account
+                const expiry = resellerData.expiry;
                 
                 // Generate codes
                 const generatedCodes = [];
@@ -1075,7 +1113,8 @@
                         used: false,
                         generatedBy: currentReseller.resellerCode,
                         generatedFor: currentReseller.username,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdBy: 'reseller'
                     });
                     
                     generatedCodes.push(code);
@@ -1107,7 +1146,7 @@
                 
             } catch (error) {
                 console.error('Error generating codes:', error);
-                showMessage('Error generating codes', 'error');
+                showMessage('Error generating codes: ' + error.message, 'error');
             } finally {
                 // Re-enable button
                 generateBtn.disabled = false;
@@ -1115,11 +1154,11 @@
             }
         }
 
-        // Generate Premium Code
+        // Generate Premium Code (FIXED FORMAT: STANY-XXXXXXXX)
         function generatePremiumCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = 'PREMIUM-';
-            for (let i = 0; i < 10; i++) {
+            let code = 'STANY-';
+            for (let i = 0; i < 8; i++) {
                 code += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return code;
@@ -1131,7 +1170,14 @@
                 showMessage(`Code copied to clipboard: ${code}`, 'success');
             }).catch(err => {
                 console.error('Copy failed:', err);
-                showMessage('Failed to copy code', 'error');
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showMessage(`Code copied: ${code}`, 'success');
             });
         }
 
@@ -1141,7 +1187,7 @@
                 // Remove listeners
                 if (codesListener) codesListener();
                 
-                // Clear session data (keep in storage for recovery)
+                // Clear session data
                 localStorage.removeItem('stany_reseller_data');
                 
                 // Show login page
@@ -1151,6 +1197,10 @@
                 // Clear form
                 document.getElementById('resellerCode').value = '';
                 document.getElementById('resellerUsername').value = '';
+                
+                // Reset variables
+                currentReseller = null;
+                resellerData = null;
                 
                 showMessage('Logged out successfully', 'info');
             }
@@ -1175,32 +1225,31 @@
         }
 
         function hideMessage() {
-            document.getElementById('messageBox').classList.remove('show');
+            const messageBox = document.getElementById('messageBox');
+            messageBox.classList.remove('show');
         }
 
-        // Session recovery on page load
+        // Session recovery
         window.addEventListener('beforeunload', function() {
             if (currentReseller && resellerData) {
-                // Save recovery data
-                localStorage.setItem('session_recovery_reseller', JSON.stringify({
+                localStorage.setItem('reseller_session_backup', JSON.stringify({
                     username: currentReseller.username,
                     timestamp: Date.now()
                 }));
             }
         });
 
-        // Check for session recovery
+        // Check session backup on load
         window.addEventListener('load', function() {
-            const recovery = localStorage.getItem('session_recovery_reseller');
-            if (recovery) {
-                const data = JSON.parse(recovery);
+            const backup = localStorage.getItem('reseller_session_backup');
+            if (backup) {
+                const data = JSON.parse(backup);
                 const hoursPassed = (Date.now() - data.timestamp) / (1000 * 60 * 60);
                 
                 if (hoursPassed < 24) {
-                    // Session can be recovered
-                    console.log('Reseller session recovery available');
+                    console.log('Reseller session backup found');
                 }
-                localStorage.removeItem('session_recovery_reseller');
+                localStorage.removeItem('reseller_session_backup');
             }
         });
     </script>
