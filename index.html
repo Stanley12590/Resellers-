@@ -3,1254 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STANY MINES PRO | Reseller Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Reseller Panel - Mines Predictor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: #0a0e17;
-            --glass: rgba(15, 22, 39, 0.9);
-            --glass-border: rgba(0, 247, 255, 0.2);
-            --neon-blue: #00f7ff;
-            --neon-pink: #ff00ff;
-            --neon-green: #00ff9d;
-            --neon-red: #ff0055;
-            --neon-yellow: #ffcc00;
-            --text: #ffffff;
-            --text-muted: #8a9bbd;
-            --radius: 16px;
-            --font-main: 'Poppins', sans-serif;
-            --font-cyber: 'Orbitron', monospace;
+            --primary: #0a0e17;
+            --secondary: #00f7ff;
+            --success: #00ff9d;
+            --danger: #ff0055;
+            --warning: #ffcc00;
+            --accent: #ff00ff;
+            --glass: rgba(15, 22, 39, 0.95);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(0, 247, 255, 0.15), transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.1), transparent 40%);
-            color: var(--text);
-            font-family: var(--font-main);
-            min-height: 100vh;
             -webkit-user-select: none;
             -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
         }
 
+        body {
+            background: var(--primary);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
         .container {
-            max-width: 500px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            padding-top: 70px;
         }
 
-        /* Login Page */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        .header {
+            text-align: center;
             padding: 20px;
-        }
-
-        .login-box {
-            background: rgba(15, 22, 39, 0.95);
-            border: 2px solid var(--neon-pink);
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 400px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
-        }
-
-        .login-title {
-            font-family: var(--font-cyber);
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 1.5rem;
-            background: linear-gradient(45deg, var(--neon-pink), #cc00ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .input-group {
+            background: var(--glass);
+            border-radius: 15px;
             margin-bottom: 20px;
+            border: 2px solid var(--warning);
         }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--neon-pink);
-            font-family: var(--font-cyber);
-            font-size: 0.9rem;
+        .header h1 {
+            color: var(--warning);
+            font-size: 24px;
         }
 
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--glass-border);
-            border-radius: 10px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--neon-pink), #cc00ff);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-family: var(--font-cyber);
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 0, 255, 0.4);
-        }
-
-        /* Dashboard */
-        .dashboard {
-            display: none;
-        }
-
-        /* Header */
-        .reseller-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: rgba(15, 22, 39, 0.9);
-            border-radius: var(--radius);
-            border: 2px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .reseller-header h1 {
-            font-family: var(--font-cyber);
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, var(--neon-pink), #cc00ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .reseller-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .info-item {
-            text-align: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border: 1px solid var(--glass-border);
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-
-        .info-value {
-            font-family: var(--font-cyber);
-            color: var(--neon-green);
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        /* Cards */
         .card {
-            background: rgba(15, 22, 39, 0.9);
-            border-radius: var(--radius);
+            background: var(--glass);
+            border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
-            border: 2px solid var(--glass-border);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s;
-        }
-
-        .card:hover {
-            border-color: var(--neon-pink);
-            transform: translateY(-3px);
+            border: 1px solid rgba(255, 204, 0, 0.2);
         }
 
         .card-title {
-            font-family: var(--font-cyber);
-            color: var(--neon-pink);
-            margin-bottom: 20px;
-            font-size: 1rem;
+            color: var(--warning);
+            font-size: 18px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* Generate Codes Form */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .form-control {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-control label {
-            margin-bottom: 8px;
-            color: var(--neon-blue);
-            font-family: var(--font-cyber);
-            font-size: 0.8rem;
-        }
-
-        .form-control input,
-        .form-control select {
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--glass-border);
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-control input:focus,
-        .form-control select:focus {
-            outline: none;
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 247, 255, 0.3);
-        }
-
-        .generate-btn {
+        .btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, var(--neon-green), #00a86b);
             border: none;
             border-radius: 10px;
-            color: #000;
-            font-family: var(--font-cyber);
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 255, 157, 0.4);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Generated Codes Display */
-        .codes-list {
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .code-item {
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
             transition: all 0.3s;
         }
 
-        .code-item:hover {
-            border-color: var(--neon-green);
-            transform: translateX(5px);
+        .btn-warning {
+            background: linear-gradient(45deg, var(--warning), #ff9900);
+            color: black;
         }
 
-        .code-value {
-            font-family: var(--font-cyber);
-            color: var(--neon-green);
-            font-size: 1.1rem;
-            letter-spacing: 2px;
+        .btn-success {
+            background: linear-gradient(45deg, var(--success), #00a86b);
+            color: white;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--warning);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 14, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: var(--glass);
+            border: 2px solid var(--warning);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
             cursor: pointer;
+        }
+
+        .code-display {
+            background: rgba(255, 204, 0, 0.1);
+            border: 2px dashed var(--warning);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
             word-break: break-all;
         }
 
-        .code-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .status-active {
-            background: linear-gradient(45deg, var(--neon-green), #00a86b);
-            color: #000;
-        }
-
-        .status-used {
-            background: linear-gradient(45deg, var(--neon-red), #cc0044);
-            color: white;
-        }
-
-        .status-expired {
-            background: linear-gradient(45deg, var(--neon-yellow), orange);
-            color: #000;
-        }
-
-        /* Sales Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
+        th {
+            background: rgba(255, 204, 0, 0.2);
             padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border: 1px solid var(--glass-border);
+            text-align: left;
+            color: var(--warning);
         }
 
-        .stat-value {
-            font-family: var(--font-cyber);
-            color: var(--neon-green);
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Logout Button */
-        .logout-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, var(--neon-red), #cc0044);
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .logout-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(255, 0, 85, 0.6);
-        }
-
-        /* Message Box */
-        .message-box {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(15, 22, 39, 0.95);
-            border: 2px solid var(--neon-green);
-            border-radius: var(--radius);
-            padding: 20px;
-            max-width: 400px;
-            z-index: 1000;
-            display: none;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .message-box.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .message-content {
-            color: var(--text);
-            margin-bottom: 15px;
-        }
-
-        .message-close {
-            background: var(--neon-red);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            color: white;
-            cursor: pointer;
-            font-family: var(--font-cyber);
-            float: right;
-        }
-
-        /* Loading */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-            font-family: var(--font-cyber);
-            color: var(--neon-blue);
-        }
-
-        .loading-spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid var(--glass-border);
-            border-top-color: var(--neon-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: var(--glass-border);
-        }
-
-        /* Copy Button */
-        .copy-btn {
-            background: var(--neon-blue);
-            border: none;
-            color: #000;
-            padding: 5px 15px;
-            border-radius: 6px;
-            font-family: var(--font-cyber);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.8rem;
-            white-space: nowrap;
-        }
-
-        .copy-btn:hover {
-            background: var(--neon-green);
-            transform: scale(1.05);
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .login-box {
-                padding: 20px;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .reseller-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .code-item {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-            
-            .logout-btn {
-                bottom: 15px;
-                right: 15px;
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div id="loginPage" class="login-container">
-        <div class="login-box">
-            <h1 class="login-title">RESELLER PORTAL<br>STANY MINES PRO</h1>
-            <div class="input-group">
-                <label><i class="fas fa-key"></i> RESELLER CODE</label>
-                <input type="text" id="resellerCode" placeholder="Enter your reseller code (e.g., STANY-H2D2LKBG)" maxlength="20">
-            </div>
-            <div class="input-group">
-                <label><i class="fas fa-user"></i> RESELLER USERNAME</label>
-                <input type="text" id="resellerUsername" placeholder="Choose a username" maxlength="20">
-            </div>
-            <button class="login-btn" onclick="loginReseller()">
-                <i class="fas fa-sign-in-alt"></i> ACTIVATE RESELLER ACCOUNT
-            </button>
-            <div style="margin-top: 20px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
-                <i class="fas fa-info-circle"></i> Each reseller code can only be used once
-            </div>
-        </div>
+    <!-- Back Button -->
+    <div class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="dashboard">
-        <div class="container">
-            <!-- Header -->
-            <div class="reseller-header">
-                <h1><i class="fas fa-user-tie"></i> RESELLER DASHBOARD</h1>
-                <div style="color: var(--neon-green); font-family: var(--font-cyber); margin-bottom: 10px;">
-                    Welcome, <span id="displayUsername"></span>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
-                    Reseller Code: <span id="displayResellerCode" style="color: var(--neon-pink);"></span>
+    <!-- Loading -->
+    <div class="loading" id="loading" style="display: flex;">
+        <div style="width: 50px; height: 50px; border: 5px solid var(--warning); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div id="loadingText" style="margin-top: 20px; color: var(--warning);">Loading...</div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container" id="container" style="display: none;">
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="header">
+                <h1><i class="fas fa-user-tie"></i> RESELLER LOGIN</h1>
+                <div style="color: #8a9bbd;">Mines Predictor Reseller Panel</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-sign-in-alt"></i> LOGIN DETAILS
                 </div>
                 
-                <div class="reseller-info">
-                    <div class="info-item">
-                        <div class="info-label">Codes Generated</div>
-                        <div class="info-value" id="codesGenerated">0</div>
+                <input type="text" id="resellerCode" class="input-control" placeholder="Enter reseller code" style="text-transform: uppercase;">
+                <input type="text" id="username" class="input-control" placeholder="Enter your username">
+                
+                <button class="btn btn-warning" onclick="resellerLogin()">
+                    <i class="fas fa-sign-in-alt"></i> LOGIN
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" style="display: none;">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-user-tie"></i> RESELLER DASHBOARD</h1>
+                <div style="color: #8a9bbd;">
+                    Welcome, <span id="resellerName"></span> | 
+                    Code: <span id="resellerCodeDisplay"></span>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-chart-line"></i> OVERVIEW
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div style="text-align: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                        <div style="font-size: 12px; color: #8a9bbd;">CODES GENERATED</div>
+                        <div id="codesGenerated" style="font-size: 24px; font-weight: bold; color: var(--warning);">0</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Codes Remaining</div>
-                        <div class="info-value" id="codesRemaining">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Codes Used</div>
-                        <div class="info-value" id="codesUsed">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Expires In</div>
-                        <div class="info-value" id="expiresIn">0 days</div>
+                    
+                    <div style="text-align: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                        <div style="font-size: 12px; color: #8a9bbd;">CODES USED</div>
+                        <div id="codesUsed" style="font-size: 24px; font-weight: bold; color: var(--success);">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Generate Codes Card -->
+            <!-- Generate Codes -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-bolt"></i> GENERATE PREMIUM CODES
+                    <i class="fas fa-plus-circle"></i> GENERATE PREMIUM CODES
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-control">
-                        <label><i class="fas fa-clock"></i> DURATION</label>
-                        <select id="codeDuration">
-                            <option value="week">1 Week</option>
-                            <option value="month">1 Month</option>
-                            <option value="lifetime">Lifetime</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-control">
-                        <label><i class="fas fa-hashtag"></i> QUANTITY</label>
-                        <input type="number" id="codeQuantity" min="1" value="1" max="10">
-                    </div>
-                </div>
+                <div style="color: var(--warning); margin-bottom: 5px;">Number of Codes</div>
+                <input type="number" id="codeCount" class="input-control" value="1" min="1" max="10">
                 
-                <button class="generate-btn" id="generateBtn" onclick="generatePremiumCodes()">
-                    <i class="fas fa-magic"></i> GENERATE CODES
+                <div style="color: var(--warning); margin-bottom: 5px;">Duration (Days)</div>
+                <input type="number" id="duration" class="input-control" value="30" min="1" max="365">
+                
+                <button class="btn btn-success" onclick="generateCodes()">
+                    <i class="fas fa-bolt"></i> GENERATE CODES
                 </button>
-                
-                <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
-                    <i class="fas fa-info-circle"></i> Each code works once per device
-                </div>
             </div>
 
             <!-- Generated Codes -->
-            <div class="card">
+            <div class="card" id="generatedCodesCard" style="display: none;">
                 <div class="card-title">
-                    <i class="fas fa-key"></i> YOUR GENERATED CODES
+                    <i class="fas fa-code"></i> GENERATED CODES
                 </div>
                 
-                <div id="codesLoading" class="loading">
-                    <div class="loading-spinner"></div>
-                    Loading your codes...
+                <div class="code-display" id="codesList">
+                    <!-- Codes appear here -->
                 </div>
                 
-                <div class="codes-list" id="codesList">
-                    <!-- Codes will be loaded here -->
-                </div>
+                <button class="btn btn-warning" onclick="copyCodes()">
+                    <i class="fas fa-copy"></i> COPY ALL CODES
+                </button>
             </div>
 
-            <!-- Sales Statistics -->
+            <!-- My Codes -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-line"></i> SALES STATISTICS
+                    <i class="fas fa-list"></i> MY GENERATED CODES
                 </div>
                 
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalCodes">0</div>
-                        <div class="stat-label">Total Codes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="activeCodes">0</div>
-                        <div class="stat-label">Active Codes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="usedCodes">0</div>
-                        <div class="stat-label">Used Codes</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="successRate">0%</div>
-                        <div class="stat-label">Success Rate</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Instructions -->
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-graduation-cap"></i> RESELLER GUIDE
-                </div>
-                <div style="font-size: 0.9rem; line-height: 1.6;">
-                    <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> <strong>Sell Codes:</strong> Generate codes and sell to customers</p>
-                    <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> <strong>Pricing:</strong> Set your own prices for each duration</p>
-                    <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> <strong>Device Lock:</strong> Each code works on one device only</p>
-                    <p><i class="fas fa-check-circle" style="color: var(--neon-green);"></i> <strong>Expiry:</strong> All codes expire when your reseller account expires</p>
-                    <p style="margin-top: 15px; color: var(--neon-yellow);">
-                        <i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong> You cannot generate more codes than your limit
-                    </p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Used By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myCodesTable">
+                            <!-- Codes loaded dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        <!-- Logout Button -->
-        <button class="logout-btn" onclick="logoutReseller()" title="Logout">
-            <i class="fas fa-sign-out-alt"></i>
-        </button>
-    </div>
-
-    <!-- Message Box -->
-    <div class="message-box" id="messageBox">
-        <div class="message-content" id="messageContent"></div>
-        <button class="message-close" onclick="hideMessage()">Close</button>
     </div>
 
     <script>
-        // Firebase Configuration (SAME AS OTHER APPS)
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
-            apiKey: "AIzaSyB0B5H5gJ8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8",
-            authDomain: "stany-mines-pro.firebaseapp.com",
-            projectId: "stany-mines-pro",
-            storageBucket: "stany-mines-pro.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:1234567890abcdef"
+            apiKey: "AIzaSyDtWAjmGIWVr3QGESAClBzRkQ5AZr5Zeys",
+            authDomain: "stanybots.firebaseapp.com",
+            projectId: "stanybots",
+            storageBucket: "stanybots.firebasestorage.app",
+            messagingSenderId: "381983533939",
+            appId: "1:381983533939:web:201157399592c6389df306",
+            measurementId: "G-W3C0C280BY"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Global Variables
-        let currentReseller = null;
+        // ==================== GLOBAL STATE ====================
         let resellerData = null;
-        let codesListener = null;
+        let myCodes = [];
 
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check existing reseller session
-            const savedReseller = localStorage.getItem('stany_reseller');
-            const savedResellerData = localStorage.getItem('stany_reseller_data');
-            
-            if (savedReseller && savedResellerData) {
-                try {
-                    currentReseller = JSON.parse(savedReseller);
-                    resellerData = JSON.parse(savedResellerData);
-                    
-                    // Check if still valid
-                    const now = Date.now();
-                    if (resellerData.expiry && resellerData.expiry > now) {
-                        // Valid session
-                        showDashboard();
-                        loadResellerData();
-                        loadResellerCodes();
-                    } else {
-                        // Expired
-                        localStorage.removeItem('stany_reseller');
-                        localStorage.removeItem('stany_reseller_data');
-                        showMessage('Reseller account expired. Please contact admin.', 'error');
-                    }
-                } catch (e) {
-                    localStorage.clear();
-                }
-            }
-            
-            // Security: Disable right click and copy
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            document.addEventListener('copy', e => e.preventDefault());
-        });
+        // ==================== UTILITY FUNCTIONS ====================
+        function showLoading(message) {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loading').style.display = 'flex';
+        }
 
-        // Login Reseller (FIXED VERSION)
-        async function loginReseller() {
-            const resellerCode = document.getElementById('resellerCode').value.trim().toUpperCase();
-            const username = document.getElementById('resellerUsername').value.trim();
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('container').style.display = 'block';
+        }
+
+        function goBack() {
+            if (resellerData) {
+                if (!confirm('Are you sure you want to logout?')) return;
+                logout();
+            }
+        }
+
+        // ==================== RESELLER LOGIN ====================
+        async function resellerLogin() {
+            const code = document.getElementById('resellerCode').value.trim().toUpperCase();
+            const username = document.getElementById('username').value.trim();
             
-            if (!resellerCode || !username) {
-                showMessage('Please enter reseller code and username', 'error');
+            if (!code || !username) {
+                alert('Please enter both code and username');
                 return;
             }
             
-            if (username.length < 3) {
-                showMessage('Username must be at least 3 characters', 'error');
-                return;
-            }
-            
-            // Validate code format (STANY-XXXXXXXX)
-            if (!resellerCode.startsWith('STANY-') || resellerCode.length !== 14) {
-                showMessage('Invalid code format. Must be STANY-XXXXXXXX (8 characters)', 'error');
-                return;
-            }
-            
-            showMessage('Validating reseller code...', 'info');
+            showLoading('Verifying reseller code...');
             
             try {
-                // Check if reseller code exists and is valid
-                const codeRef = db.collection('codes').doc(resellerCode);
-                const doc = await codeRef.get();
+                // Check reseller code
+                const snapshot = await db.collection('premium_codes')
+                    .where('code', '==', code)
+                    .where('type', '==', 'reseller')
+                    .where('status', '==', 'active')
+                    .get();
                 
-                if (!doc.exists) {
-                    showMessage('Invalid reseller code. Code not found in system.', 'error');
-                    return;
+                if (snapshot.empty) {
+                    throw new Error('Invalid or inactive reseller code');
                 }
                 
-                const codeData = doc.data();
+                resellerData = snapshot.docs[0].data();
+                resellerData.id = snapshot.docs[0].id;
                 
-                // Check if code is a reseller code
-                if (codeData.type !== 'reseller') {
-                    showMessage('This is not a reseller code', 'error');
-                    return;
+                // Update username if different
+                if (resellerData.username !== username) {
+                    await db.collection('premium_codes').doc(resellerData.id).update({
+                        username: username
+                    });
+                    resellerData.username = username;
                 }
                 
-                // Check if code is already used
-                if (codeData.used) {
-                    showMessage('Reseller code already activated', 'error');
-                    return;
-                }
-                
-                // Check if expired
-                if (codeData.expiry && codeData.expiry < Date.now()) {
-                    showMessage('Reseller code has expired', 'error');
-                    return;
-                }
-                
-                // Check if username already exists
-                const userCheck = await db.collection('users').doc(username).get();
-                if (userCheck.exists) {
-                    showMessage('Username already taken. Please choose another.', 'error');
-                    return;
-                }
-                
-                // Generate device ID
-                const deviceId = generateDeviceId();
-                
-                // Activate reseller account
-                currentReseller = {
-                    username: username,
-                    resellerCode: resellerCode,
-                    deviceId: deviceId,
-                    activatedAt: Date.now()
-                };
-                
-                resellerData = {
-                    username: username,
-                    status: 'reseller',
-                    resellerCode: resellerCode,
-                    expiry: codeData.expiry,
-                    maxCodes: codeData.maxCodes || 10,
-                    generatedCodes: 0,
-                    deviceId: deviceId,
-                    activatedAt: Date.now()
-                };
-                
-                // Mark reseller code as used
-                await codeRef.update({
-                    used: true,
-                    usedBy: username,
-                    usedByDevice: deviceId,
-                    usedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Create reseller account in users collection
-                await db.collection('users').doc(username).set({
-                    username: username,
-                    status: 'reseller',
-                    resellerCode: resellerCode,
-                    expiry: codeData.expiry,
-                    maxCodes: codeData.maxCodes || 10,
-                    generatedCodes: 0,
-                    deviceId: deviceId,
-                    lastActive: firebase.firestore.FieldValue.serverTimestamp(),
-                    activatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Save session
-                localStorage.setItem('stany_reseller', JSON.stringify(currentReseller));
-                localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
+                // Load reseller data
+                await loadResellerData();
                 
                 // Show dashboard
-                showDashboard();
-                loadResellerData();
-                showMessage('Reseller account activated successfully!', 'success');
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('resellerName').textContent = username;
+                document.getElementById('resellerCodeDisplay').textContent = code;
                 
             } catch (error) {
-                console.error('Login error:', error);
-                showMessage('Error activating reseller account: ' + error.message, 'error');
-            }
-        }
-
-        // Generate Device ID
-        function generateDeviceId() {
-            let deviceId = localStorage.getItem('reseller_device_id');
-            if (!deviceId) {
-                deviceId = 'RES_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('reseller_device_id', deviceId);
-            }
-            return deviceId;
-        }
-
-        // Show Dashboard
-        function showDashboard() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            
-            // Update display
-            document.getElementById('displayUsername').textContent = currentReseller.username;
-            document.getElementById('displayResellerCode').textContent = currentReseller.resellerCode;
-        }
-
-        // Load Reseller Data
-        async function loadResellerData() {
-            if (!resellerData) return;
-            
-            try {
-                // Refresh data from Firebase
-                const userDoc = await db.collection('users').doc(currentReseller.username).get();
-                if (userDoc.exists) {
-                    const firebaseData = userDoc.data();
-                    resellerData = { ...resellerData, ...firebaseData };
-                    localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
-                }
-                
-                // Update UI with reseller data
-                document.getElementById('codesGenerated').textContent = resellerData.generatedCodes || 0;
-                
-                const maxCodes = resellerData.maxCodes || 10;
-                const generated = resellerData.generatedCodes || 0;
-                const remaining = maxCodes - generated;
-                
-                document.getElementById('codesRemaining').textContent = remaining > 0 ? remaining : 0;
-                
-                // Calculate days until expiry
-                if (resellerData.expiry) {
-                    const now = Date.now();
-                    const expiry = resellerData.expiry;
-                    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                    
-                    document.getElementById('expiresIn').textContent = daysLeft > 0 ? `${daysLeft} days` : 'Expired';
-                    
-                    if (daysLeft <= 0) {
-                        document.getElementById('generateBtn').disabled = true;
-                        document.getElementById('generateBtn').innerHTML = '<i class="fas fa-ban"></i> ACCOUNT EXPIRED';
-                    }
-                }
-                
-                // Get used codes count
-                const codesSnapshot = await db.collection('codes')
-                    .where('generatedBy', '==', currentReseller.resellerCode)
-                    .where('used', '==', true)
-                    .get();
-                
-                document.getElementById('codesUsed').textContent = codesSnapshot.size;
-                
-                // Update statistics
-                const allCodes = await db.collection('codes')
-                    .where('generatedBy', '==', currentReseller.resellerCode)
-                    .get();
-                
-                const activeCodes = await db.collection('codes')
-                    .where('generatedBy', '==', currentReseller.resellerCode)
-                    .where('used', '==', false)
-                    .get();
-                
-                document.getElementById('totalCodes').textContent = allCodes.size;
-                document.getElementById('activeCodes').textContent = activeCodes.size;
-                document.getElementById('usedCodes').textContent = codesSnapshot.size;
-                
-                // Calculate success rate
-                const successRate = allCodes.size > 0 ? Math.round((codesSnapshot.size / allCodes.size) * 100) : 0;
-                document.getElementById('successRate').textContent = `${successRate}%`;
-                
-            } catch (error) {
-                console.error('Error loading reseller data:', error);
-            }
-        }
-
-        // Load Reseller Codes
-        async function loadResellerCodes() {
-            const codesList = document.getElementById('codesList');
-            const codesLoading = document.getElementById('codesLoading');
-            
-            codesLoading.style.display = 'flex';
-            codesList.innerHTML = '';
-            
-            try {
-                // Set up real-time listener for reseller's codes
-                if (codesListener) codesListener();
-                
-                codesListener = db.collection('codes')
-                    .where('generatedBy', '==', currentReseller.resellerCode)
-                    .orderBy('createdAt', 'desc')
-                    .onSnapshot(snapshot => {
-                        codesList.innerHTML = '';
-                        
-                        if (snapshot.empty) {
-                            codesList.innerHTML = `
-                                <div class="empty-state">
-                                    <div class="empty-icon">
-                                        <i class="fas fa-key"></i>
-                                    </div>
-                                    <p>No codes generated yet</p>
-                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
-                                        Generate your first premium code above
-                                    </p>
-                                </div>
-                            `;
-                        } else {
-                            snapshot.forEach(doc => {
-                                const code = doc.data();
-                                const codeItem = document.createElement('div');
-                                codeItem.className = 'code-item';
-                                
-                                // Determine status
-                                let status = 'status-active';
-                                let statusText = 'ACTIVE';
-                                
-                                if (code.used) {
-                                    status = 'status-used';
-                                    statusText = 'USED';
-                                } else if (code.expiry && code.expiry < Date.now()) {
-                                    status = 'status-expired';
-                                    statusText = 'EXPIRED';
-                                }
-                                
-                                // Format date
-                                let createdDate = 'N/A';
-                                if (code.createdAt) {
-                                    createdDate = code.createdAt.toDate().toLocaleDateString();
-                                }
-                                
-                                // Duration display
-                                let durationText = 'N/A';
-                                if (code.duration === 'week') durationText = '1 Week';
-                                else if (code.duration === 'month') durationText = '1 Month';
-                                else if (code.duration === 'lifetime') durationText = 'Lifetime';
-                                
-                                codeItem.innerHTML = `
-                                    <div style="flex: 1;">
-                                        <div class="code-value" onclick="copyCode('${doc.id}')">
-                                            ${doc.id}
-                                        </div>
-                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
-                                            <div>Duration: ${durationText}</div>
-                                            <div>Created: ${createdDate}</div>
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <span class="code-status ${status}">${statusText}</span>
-                                        <div style="margin-top: 10px;">
-                                            <button class="copy-btn" onclick="copyCode('${doc.id}')">
-                                                <i class="fas fa-copy"></i> Copy
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                                
-                                codesList.appendChild(codeItem);
-                            });
-                        }
-                        
-                        codesLoading.style.display = 'none';
-                        
-                        // Update reseller data
-                        if (resellerData) {
-                            resellerData.generatedCodes = snapshot.size;
-                            localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
-                            loadResellerData();
-                        }
-                        
-                    }, error => {
-                        console.error('Codes listener error:', error);
-                        codesLoading.style.display = 'none';
-                        showMessage('Error loading codes. Please refresh.', 'error');
-                    });
-                
-            } catch (error) {
-                console.error('Error loading codes:', error);
-                codesLoading.style.display = 'none';
-                showMessage('Error loading your codes', 'error');
-            }
-        }
-
-        // Generate Premium Codes (FIXED VERSION)
-        async function generatePremiumCodes() {
-            if (!resellerData) {
-                showMessage('Please login first', 'error');
-                return;
-            }
-            
-            const duration = document.getElementById('codeDuration').value;
-            let quantity = parseInt(document.getElementById('codeQuantity').value) || 1;
-            
-            // Validate quantity
-            if (quantity < 1 || quantity > 10) {
-                showMessage('Quantity must be between 1 and 10', 'error');
-                return;
-            }
-            
-            // Check if reseller can generate more codes
-            const maxCodes = resellerData.maxCodes || 10;
-            const generated = resellerData.generatedCodes || 0;
-            
-            if (generated >= maxCodes) {
-                showMessage(`You have reached your limit of ${maxCodes} codes`, 'error');
-                return;
-            }
-            
-            if (generated + quantity > maxCodes) {
-                quantity = maxCodes - generated;
-                showMessage(`You can only generate ${quantity} more codes (limit: ${maxCodes})`, 'warning');
-                if (quantity <= 0) return;
-            }
-            
-            // Check if reseller account is expired
-            if (resellerData.expiry && resellerData.expiry < Date.now()) {
-                showMessage('Your reseller account has expired', 'error');
-                return;
-            }
-            
-            // Disable button during generation
-            const generateBtn = document.getElementById('generateBtn');
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERATING...';
-            
-            try {
-                // Set expiry same as reseller account
-                const expiry = resellerData.expiry;
-                
-                // Generate codes
-                const generatedCodes = [];
-                
-                for (let i = 0; i < quantity; i++) {
-                    const code = generatePremiumCode();
-                    
-                    // Save to Firestore
-                    await db.collection('codes').doc(code).set({
-                        type: 'premium',
-                        duration: duration,
-                        expiry: expiry,
-                        deviceLock: true,
-                        used: false,
-                        generatedBy: currentReseller.resellerCode,
-                        generatedFor: currentReseller.username,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        createdBy: 'reseller'
-                    });
-                    
-                    generatedCodes.push(code);
-                }
-                
-                // Update reseller's generated codes count
-                const newGeneratedCount = generated + quantity;
-                await db.collection('users').doc(currentReseller.username).update({
-                    generatedCodes: newGeneratedCount,
-                    lastActive: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Update local data
-                resellerData.generatedCodes = newGeneratedCount;
-                localStorage.setItem('stany_reseller_data', JSON.stringify(resellerData));
-                
-                // Show success message with codes
-                let message = `<strong>${quantity} premium codes generated successfully!</strong><br><br>`;
-                message += `<strong>Generated Codes:</strong><br>`;
-                generatedCodes.forEach(code => {
-                    message += `<code style="color:var(--neon-green); font-family:var(--font-cyber);">${code}</code><br>`;
-                });
-                message += `<br><small style="color:var(--text-muted);">These codes will expire when your reseller account expires.</small>`;
-                
-                showMessage(message, 'success');
-                
-                // Refresh codes list
-                loadResellerCodes();
-                
-            } catch (error) {
-                console.error('Error generating codes:', error);
-                showMessage('Error generating codes: ' + error.message, 'error');
+                alert('Login failed: ' + error.message);
             } finally {
-                // Re-enable button
-                generateBtn.disabled = false;
-                generateBtn.innerHTML = '<i class="fas fa-magic"></i> GENERATE CODES';
+                hideLoading();
             }
         }
 
-        // Generate Premium Code (FIXED FORMAT: STANY-XXXXXXXX)
-        function generatePremiumCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = 'STANY-';
-            for (let i = 0; i < 8; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
+        async function loadResellerData() {
+            // Load codes generated by this reseller
+            const snapshot = await db.collection('premium_codes')
+                .where('createdBy', '==', resellerData.code)
+                .get();
+            
+            myCodes = [];
+            snapshot.forEach(doc => {
+                myCodes.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Update stats
+            document.getElementById('codesGenerated').textContent = myCodes.length;
+            document.getElementById('codesUsed').textContent = myCodes.filter(c => c.status === 'used').length;
+            
+            // Update table
+            updateCodesTable();
         }
 
-        // Copy Code to Clipboard
-        function copyCode(code) {
-            navigator.clipboard.writeText(code).then(() => {
-                showMessage(`Code copied to clipboard: ${code}`, 'success');
-            }).catch(err => {
-                console.error('Copy failed:', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = code;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showMessage(`Code copied: ${code}`, 'success');
+        function updateCodesTable() {
+            const table = document.getElementById('myCodesTable');
+            table.innerHTML = '';
+            
+            myCodes.forEach(code => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${code.code}</strong></td>
+                    <td>${code.duration || 30} days</td>
+                    <td style="color: ${code.status === 'active' ? 'var(--success)' : 'var(--warning)'}">
+                        ${code.status || 'active'}
+                    </td>
+                    <td>${code.usedByUsername || 'Not used'}</td>
+                `;
+                table.appendChild(row);
             });
         }
 
-        // Logout Reseller
-        function logoutReseller() {
-            if (confirm('Are you sure you want to logout?')) {
-                // Remove listeners
-                if (codesListener) codesListener();
-                
-                // Clear session data
-                localStorage.removeItem('stany_reseller_data');
-                
-                // Show login page
-                document.getElementById('dashboard').style.display = 'none';
-                document.getElementById('loginPage').style.display = 'flex';
-                
-                // Clear form
-                document.getElementById('resellerCode').value = '';
-                document.getElementById('resellerUsername').value = '';
-                
-                // Reset variables
-                currentReseller = null;
-                resellerData = null;
-                
-                showMessage('Logged out successfully', 'info');
+        // ==================== GENERATE CODES ====================
+        async function generateCodes() {
+            const count = parseInt(document.getElementById('codeCount').value);
+            const duration = parseInt(document.getElementById('duration').value);
+            
+            if (count < 1 || count > 10) {
+                alert('Please enter between 1 and 10 codes');
+                return;
             }
-        }
-
-        // Message Functions
-        function showMessage(message, type = 'info') {
-            const messageBox = document.getElementById('messageBox');
-            const messageContent = document.getElementById('messageContent');
             
-            // Set color based on type
-            let color = 'var(--neon-blue)';
-            if (type === 'error') color = 'var(--neon-red)';
-            else if (type === 'success') color = 'var(--neon-green)';
-            else if (type === 'warning') color = 'var(--neon-yellow)';
+            showLoading('Generating codes...');
             
-            messageContent.innerHTML = `<div style="color:${color};">${message}</div>`;
-            messageBox.classList.add('show');
+            const generated = [];
+            const now = new Date();
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + duration);
             
-            // Auto hide after 5 seconds
-            setTimeout(hideMessage, 5000);
-        }
-
-        function hideMessage() {
-            const messageBox = document.getElementById('messageBox');
-            messageBox.classList.remove('show');
-        }
-
-        // Session recovery
-        window.addEventListener('beforeunload', function() {
-            if (currentReseller && resellerData) {
-                localStorage.setItem('reseller_session_backup', JSON.stringify({
-                    username: currentReseller.username,
-                    timestamp: Date.now()
-                }));
-            }
-        });
-
-        // Check session backup on load
-        window.addEventListener('load', function() {
-            const backup = localStorage.getItem('reseller_session_backup');
-            if (backup) {
-                const data = JSON.parse(backup);
-                const hoursPassed = (Date.now() - data.timestamp) / (1000 * 60 * 60);
-                
-                if (hoursPassed < 24) {
-                    console.log('Reseller session backup found');
+            try {
+                for (let i = 0; i < count; i++) {
+                    const code = 'STANY' + Math.random().toString(36).substr(2, 8).toUpperCase();
+                    generated.push(code);
+                    
+                    await db.collection('premium_codes').add({
+                        code: code,
+                        type: 'premium',
+                        duration: duration,
+                        status: 'active',
+                        createdBy: resellerData.code,
+                        createdByUsername: resellerData.username,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        expiresAt: expiry
+                    });
                 }
-                localStorage.removeItem('reseller_session_backup');
+                
+                // Show generated codes
+                document.getElementById('codesList').innerHTML = 
+                    generated.map(c => `<div style="margin: 5px 0;">${c}</div>`).join('');
+                document.getElementById('generatedCodesCard').style.display = 'block';
+                
+                // Reload data
+                await loadResellerData();
+                
+                alert(`${count} premium codes generated successfully!`);
+                
+            } catch (error) {
+                console.error('Error generating codes:', error);
+                alert('Error generating codes: ' + error.message);
+            } finally {
+                hideLoading();
             }
+        }
+
+        function copyCodes() {
+            const codes = Array.from(document.querySelectorAll('#codesList div'))
+                .map(div => div.textContent)
+                .join('\n');
+            
+            navigator.clipboard.writeText(codes);
+            alert('Codes copied to clipboard!');
+        }
+
+        // ==================== LOGOUT ====================
+        function logout() {
+            resellerData = null;
+            myCodes = [];
+            
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('resellerCode').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('generatedCodesCard').style.display = 'none';
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Security
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                alert('Action not allowed');
+            });
+            
+            document.addEventListener('copy', function(e) {
+                if (!e.target.closest('.code-display')) {
+                    e.preventDefault();
+                    alert('Copying disabled');
+                }
+            });
+            
+            hideLoading();
         });
     </script>
 </body>
